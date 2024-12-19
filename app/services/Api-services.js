@@ -20,6 +20,17 @@ dotenv.config({path: path.resolve(__dirname, '..', '..', '.env')})
     
 
 
+        export async function getAll(){
+            try {
+                const resutl = await ApiExercices.get('');
+                
+                return resutl;
+                
+            } catch (error) {
+                return {status: 502, message: 'Le service est temporairement indisponible'}
+            }
+        }
+
     export async function getTypeExercises (name){
         try {
             const result = await ApiExercices.get('',{
