@@ -8,7 +8,5 @@ app.get('/', ()=> {
 })
 
 
-app.get('/type/type:type', (req, res) => {
-
-})
+app.get('/type/type:type', () => {})
 

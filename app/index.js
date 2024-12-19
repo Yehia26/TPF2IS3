@@ -1,21 +1,21 @@
 import  express  from 'express';
 const app = express();
 const port = 3000;
-import ApiServe from './services/Api-server';
-
-const ExercicesApi = new ApiServe();
+import{ ControllerDifficulty, ControlllerType } from './controllers/controllers.js';
 
 
-app.get('/', ()=> {
-    console.log('page d\'acceuil')
-    return "Salut !"
+
+app.get('/',  async ()=> {
+  
+    
 })
-// Recupérer le type d'exercices
-app.get('/type/type:name', (req, res) => {
-    ExercicesApi.getMarque(req.params.name)
-})
+// // Recupérer selon le type d'exercices
+app.get('/type/:type', ControlllerType )
 
-// Recup selon le niveau d'exercice
 
-app.get('/difficulty/:level')
-app.listen(port, ()=> console.log('le serveur est bien lancé'));
+// // Recup selon le niveau d'exercice
+// app.get('/difficulty/:level', ControllerDifficulty)
+
+// // Recup les exercices selon le muscle ciblé
+// app.get('/muscle/:muscle', Controller)
+app.listen(port, ()=> console.log(`le serveur est bien lancé au port http://localhost:${port}`));
