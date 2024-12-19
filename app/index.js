@@ -1,14 +1,13 @@
 import  express  from 'express';
-import axios from 'axios';
+import Router from './routes/ExercicesRoutes.js';
 
-// instancier l'API ou l'objet qui va nous servir à écouter les requettes
+
 const app = express();
-const port = 3000;
+const port = 3000
+app.use(Router)
 
-app.get('/users', ()=> {
-    console.log('page d\'acceuil')
-    return "Salut !"
+
+
+app.listen(port, ()=> {
+    console.log(`le serveur est lancé au port http://localhost:${port}`)
 })
-
-// créer l'API
-app.listen(port, ()=> console.log('le serveur est bien lancé'));
