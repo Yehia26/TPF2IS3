@@ -1,20 +1,17 @@
 import { get } from "http"
 import { getTypeExercises, getDifficultyExercises, getMuscleExercices, getAll, getCollection, getAlltypes, getAllMuscles, getAllDifficulties } from "../services/Api-services.js"
-
+import fs from 'fs/promises'
 
 export const CollectionController = async (req, res) => {
     try {
         const save = await getCollection(); 
-        if(save) {
-            const data = fs.readFileSync('./data/db.json', 'utf-8')
-             
-            if(data.length == 0){
-                return res.status(404).json({message: 'Les données demandées sont introuvables.'})
-            }else {
-                return res.status(200).json(JSON.parse(data))
-            }
-
+        if(save.status !=  200){
+            return res.status(400).json({message: 'impossible de récupérer les données'})
         }
+        else{
+            return res.status(200).json({message: save.message})
+        }
+
     } catch (error) {
         console.log('Impossible de récupèrer les données: ', error)
         return res.status(500).json({message: 'Une erreur interne est survenue. Veuillez réessayer plus tard.'})

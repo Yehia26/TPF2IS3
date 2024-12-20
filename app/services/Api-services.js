@@ -2,8 +2,7 @@ import axios from "axios";
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from "url";
-import fs from 'fs/promises'
-import { get } from "http";
+import fs  from 'fs/promises'
 
 
 const __filename = fileURLToPath(import.meta.url)
@@ -36,6 +35,7 @@ export async function getCollection(){
             exercises.push(item)
         })
     }
+    
 
     // Collection de données selon le muscle
     for (const m of muscle) {
@@ -49,38 +49,29 @@ export async function getCollection(){
         })  
     }
 
-    const save = await saveTojson(exercises);
-    if (save) return true;
+    let data = await fs.readFile('./data/db.json', 'utf-8');
+    if(data.trim().length == 0){
+       data = JSON.stringify(exercises, null, 2)
+       fs.writeFile('./data/db.json', data, 'utf-8')
+    }
+    else {
+        const dataFile = JSON.parse(data)
+        exercises.map((item) => {
+            dataFile.push(item)
+        })
+        fs.writeFile('./data/db.json', JSON.stringify(dataFile, null, 2), 'utf-8')
+    }
+  
+    return {status: 200, message: 'Les données ont été sauvegardées avec succès'};
 }
 
 // Sauvegarde des données dans un fichier json
-function saveTojson(collection){
+async function saveTojson(collection){
     try {
-
-        fs.readFile('./data/db.json', 'utf-8', (err, data) => {
-            if(err) throw err;
-
-            if(data.trim().length == 0){
-                fs.writeFile('./data/db.json', JSON.stringify(collection, null, 2), 'utf-8', (err) => {
-                    if(err) throw err;
-                    console.log('Données sauvegardées avec succès !')
-                })
-            }
-            else {
-                const jsondata = JSON.parse(data)
-                jsondata.push(collection);
-
-                const updatedData = JSON.stringify(jsondata, null, 2)
-                fs.writeFile('./data/db.json', updatedData, 'utf-8', (err) => {
-                    if(err) throw err;
-                    console.log('Données sauvegardées avec succès !')
-                })
-            } 
-        })
+        const data = await fs.readFile('./data/db.json', 'utf-8')
         return true;
         
     } catch (error) {    
-            console.error(`Les données ont été sauvegardées dans ${filename}`)
             throw new Error('Impossible de sauvegarder les données', error)
     }
 }
