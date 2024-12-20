@@ -2,72 +2,237 @@ import axios from "axios";
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from "url";
+import fs from 'fs/promises'
+import { get } from "http";
 
-const __filename =fileURLToPath(import.meta.url)
+
+const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 dotenv.config({path: path.resolve(__dirname, '..', '..', '.env')})
 
 
 
-  
-        const ApiExercices = axios.create({
-            baseURL: process.env.BASE_URL,
-            headers: {
-                'X-Api-Key': process.env.API_KEY
+//Instances axios
+const ApiExercices = axios.create({
+    baseURL: process.env.BASE_URL,
+    headers: {
+        'X-Api-Key': process.env.API_KEY
+    }
+})
+export async function getCollection(){
+    let exercises = [];
+    const type = ['cardio', 'olympic_weightlifting', 'plyometrics', 'powerlifting', 'strength', 'strength', 'strength']
+    const muscle = ['abdominals', 'biceps', 'calves', 'chest', 'forearms', 'glutes', 'hamstrings', 'lats', 'lower_back', 'middle_back', 'neck', 'quadriceps', 'traps', 'triceps']
+
+    // Collection de données selon le type
+    for (const t of type) {
+        const result = await ApiExercices.get('', {
+            params: {
+                type: t
             }
+        });
+        result.data.map((item) => { 
+            exercises.push(item)
         })
-    
+    }
 
-
-        export async function getAll(){
-            try {
-                const resutl = await ApiExercices.get('');
-                
-                return resutl;
-                
-            } catch (error) {
-                return {status: 502, message: 'Le service est temporairement indisponible'}
+    // Collection de données selon le muscle
+    for (const m of muscle) {
+        const result = await ApiExercices.get('', {
+            params: {
+                muscle: m
             }
-        }
+        });
+        result.data.map((item) => {
+            exercises.push(item)
+        })  
+    }
 
+    const save = await saveTojson(exercises);
+    if (save) return true;
+}
+
+// Sauvegarde des données dans un fichier json
+function saveTojson(collection){
+    try {
+
+        fs.readFile('./data/db.json', 'utf-8', (err, data) => {
+            if(err) throw err;
+
+            if(data.trim().length == 0){
+                fs.writeFile('./data/db.json', JSON.stringify(collection, null, 2), 'utf-8', (err) => {
+                    if(err) throw err;
+                    console.log('Données sauvegardées avec succès !')
+                })
+            }
+            else {
+                const jsondata = JSON.parse(data)
+                jsondata.push(collection);
+
+                const updatedData = JSON.stringify(jsondata, null, 2)
+                fs.writeFile('./data/db.json', updatedData, 'utf-8', (err) => {
+                    if(err) throw err;
+                    console.log('Données sauvegardées avec succès !')
+                })
+            } 
+        })
+        return true;
+        
+    } catch (error) {    
+            console.error(`Les données ont été sauvegardées dans ${filename}`)
+            throw new Error('Impossible de sauvegarder les données', error)
+    }
+}
+  
+       
+    
+// Récupération des données
+
+export async function getAll() {
+    try {
+        let data = [];
+        const dataFile = await fs.readFile('./data/db.json', 'utf-8');
+        
+        if (dataFile.trim().length == 0) {
+            return { status: 404, message: 'Les données demandées sont introuvables.' };
+        } else {
+            const exercises = JSON.parse(dataFile);
+            exercises.map((item) => {
+                data.push(item);
+            });
+            return { status: 200, data: data };
+        }
+    } catch (error) {
+        return { status: 502, message: 'Le service est temporairement indisponible' };
+    }
+}
+    // Récupération des données selon le type
     export async function getTypeExercises (name){
         try {
-            const result = await ApiExercices.get('',{
-                params: {
-                    type: name
-                }
-            })
-            return result;
+           const dataFile = await fs.readFile('./data/db.json', 'utf-8');
+
+           if(dataFile.trim().length == 0){
+               return {status: 404, message: 'Les données demandées sont introuvables.'}
+
+              }
+              else {
+                const exercises = JSON.parse(dataFile)
+                const result = exercises.filter((item) => item.type == name)
+                return {status: 200, data: result}
+              }
+
         } catch (error) {
             return {status: 502, message: 'Le service est temporairement indisponible'}
         }
     }
+    // Récupération des données selon la difficulté
    export async function getDifficultyExercises(level){
         try {
-            const result = await ApiExercices.get('', {
-                params: {
-                    difficulty: level
-                }
-            })
-            return result;
+            const datFile = await fs.readFile('./data/db.json', 'utf-8');
+            if(datFile.trim().length == 0){
+                return {status: 404, message: 'Les données demandées sont introuvables.'}
+            }
+            else {
+                const exercises = JSON.parse(datFile)
+                const result = exercises.filter((item) => item.difficulty == level)
+                return {status: 200, data: result}
+            }
             
         } catch (error) {
             return {status: 502, message: 'Le service est temporairement indisponible'}
         }
     }
    
+    // Récupération des données selon le muscle
 export const  getMuscleExercices= async (muscle) => {
     try {
-            const result = await ApiExercices.get('', {
-                params: {
-                    muscle: muscle
-                }
-            })
-            return result;
+            const dataFile = await fs.readFile('./data/db.json', 'utf-8');
+            if(dataFile.trim().length == 0){
+                return {status: 404, message: 'Les données demandées sont introuvables.'}
+            }
+            else {
+                const exercises = JSON.parse(dataFile)
+               const result = exercises.filter((item) => item.muscle == muscle)
+                return {status: 200, data: result}  
+            }
 
     } catch (error) {
         return {status: 502, message: 'Le service est temporairement indisponible'}
     }
 }
 
+export const getAlltypes = async () => {
+    try {
+            const dataFile = await fs.readFile('./data/db.json', 'utf-8');
+
+            if(dataFile.trim().length == 0){
+                return {status: 404, message: 'Les données demandées sont introuvables.'}
+            }
+            else {
+                let result = [];
+                const exercises = JSON.parse(dataFile)
+                 exercises.map((item) => {
+                    if(item.type){
+                        if(!result.includes(item.type)){
+                            result.push(item.type)
+                        }
+                    }
+                })
+                return {status: 200, data: result}  
+            }
+
+    } catch (error) {
+        return {status: 502, message: 'Le service est temporairement indisponible'}
+    }
+}
+
+
+export const getAllMuscles = async () => { 
+    try {
+        const dataFile = await fs.readFile('./data/db.json', 'utf-8');
+        if(dataFile.trim().length == 0){
+            return {status: 404, message: 'Les données demandées sont introuvables.'}
+        }
+        else {
+            let result = [];
+            const exercises = JSON.parse(dataFile)
+            exercises.map((item) => {
+                if(item.muscle){
+                    if(!result.includes(item.muscle)){
+                        result.push(item.muscle)
+                    }
+                }
+            })
+            console.log('les données sont envoyées')
+            return {status: 200, data: result}  
+        }
+
+} catch (error) {
+        return {status: 502, message: 'Le service est temporairement indisponible'}
+}
+}
+
+export const getAllDifficulties = async () => { 
+    try {
+        const dataFile = await fs.readFile('./data/db.json', 'utf-8');
+        if(dataFile.trim().length == 0){
+            return {status: 404, message: 'Les données demandées sont introuvables.'}
+        }
+        else {
+            let result = [];
+            const exercises = JSON.parse(dataFile)
+            exercises.map((item) => {
+                if(item.difficulty){
+                    if(!result.includes(item.difficulty)){
+                        result.push(item.difficulty)
+                    }
+                }
+            })
+            return {status: 200, data: result}  
+        }
+
+} catch (error) {
+        return {status: 502, message: 'Le service est temporairement indisponible'}
+}
+}
